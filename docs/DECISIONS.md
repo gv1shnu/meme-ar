@@ -75,7 +75,29 @@ are projected to screen each frame via the spatial provider. This avoids world-c
 billboard / occlusion complexity for the first MVP while still tracking AR world anchors.
 True world-space billboards with depth occlusion are a documented next milestone.
 
-## 11. Pure-C# orchestrator for testability
+## 11. Media is source-agnostic; attribution is a feature, not a license
+Reactions can be video/audio clips, but the pipeline references media through a
+`MediaReference` that resolves to a bundled clip, a StreamingAssets file, or a URL. The
+content SOURCE — and therefore the licensing strategy (user-provided, licensed, royalty-free,
+original) — is a swappable decision, exactly like the intelligence boundary. The app bundles
+only original placeholder cards so it is always distributable. A footer attribution field
+exists for crediting creators, but it is explicitly treated as credit for the audience, not as
+a substitute for a content license; that separation is called out in code and docs so the
+legal posture is never assumed to be "solved" by attribution.
+
+## 12. Scene-level pack lock for tonal consistency
+A "scene" locks onto a single meme pack (`SessionState.ScenePackId`) and the ranker boosts
+that pack, so a run doesn't whiplash between unrelated styles. The lock releases after a quiet
+gap. This keeps content consistent within a moment without hard-coding which pack — the first
+reaction of a scene decides.
+
+## 13. Media never blocks the reaction; it degrades to text
+Clip loading has a timeout and an error path that fall back to the dialogue text card, and
+playback is only started once the view is active. A reaction always appears — offline, on a
+missing file, or on a slow clip — so media richness never compromises the "a reaction always
+lands" guarantee.
+
+## 14. Pure-C# orchestrator for testability
 `MemePipeline` is a plain C# class (no MonoBehaviour). The Unity layer (`AppController`)
 only drives it and owns providers/renderer. This lets the entire pipeline run in headless
 EditMode tests with a mock renderer and a manual clock, which is essential because the cloud

@@ -121,6 +121,20 @@ To customize, create a config asset via **Assets ▸ Create ▸ MemeAR ▸ Confi
 `Resources/` folder named `MemeArConfig`, and tune values there (or assign it to an
 `AppController` in your own scene).
 
+### Meme content (cards, clips, packs)
+
+Reactions can be **generated animated cards** (default, zero-asset), **still sprites**, or
+**video clips with audio** composited onto the camera feed (with chroma-key/alpha background
+blending). Content is source-agnostic — see **`docs/MEDIA_PACKS.md`** to drop your own clips
+into `Assets/StreamingAssets/MemePacks/<pack>/` with a small JSON manifest and a footer
+attribution. Within a scene the app locks onto one **pack** so reactions stay tonally
+consistent; if a clip can't load it falls back to the dialogue text card. Audio is mutable
+from the HUD.
+
+> Copyright: the footer attribution is **credit, not a license**. The app bundles only
+> original placeholder cards; provision any real viral/film clips as user packs you have the
+> right to use (licensed / royalty-free / CC / original). Details in `docs/MEDIA_PACKS.md`.
+
 ## Build for iOS
 
 1. **File ▸ Build Settings ▸ iOS ▸ Switch Platform**.
@@ -161,9 +175,12 @@ the EditMode tests, but the following must be checked on hardware — see
 - Live perception is not yet implemented: in LiveAR mode the scene has camera pose +
   planes but **no people/objects** until on-device detectors are added. Simulation mode
   demonstrates the full people/object pipeline.
-- Reaction cards render in a screen-space overlay; world-anchored reactions are projected
-  to screen each frame (robust, but not a true world-space mesh billboard yet).
-- Placeholder text reaction cards only (no third-party/copyrighted meme assets).
+- Reaction cards/clips render in a screen-space overlay; world-anchored reactions are
+  projected to screen each frame (robust, but not a true world-space mesh billboard yet).
+- Bundled content is original placeholder cards; real video/audio clips are supported but
+  supplied as user packs (see `docs/MEDIA_PACKS.md`) — none are shipped.
+- Android reads `StreamingAssets` from inside the APK; a production Android build should
+  stream pack clips via `UnityWebRequest` (manifest/parser are already platform-independent).
 - No persistence, no networking, no cloud AI.
 
 ## Next engineering milestones
