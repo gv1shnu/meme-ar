@@ -18,12 +18,14 @@ namespace MemeAR.Retrieval
         private readonly DeterministicRandom _random;
         private readonly float _recentUsagePenalty;
         private readonly float _jitter;
+        private readonly float _scenePackBias;
 
-        public DeterministicMemeRanker(DeterministicRandom random, float recentUsagePenalty = 0.6f, float jitter = 0.15f)
+        public DeterministicMemeRanker(DeterministicRandom random, float recentUsagePenalty = 0.6f, float jitter = 0.15f, float scenePackBias = 1.25f)
         {
             _random = random;
             _recentUsagePenalty = recentUsagePenalty;
             _jitter = jitter;
+            _scenePackBias = scenePackBias;
         }
 
         public void Rank(
@@ -57,6 +59,12 @@ namespace MemeAR.Retrieval
 
                 // Tag relevance to the event type.
                 score += 0.4f * TagRelevance(m, e.Type);
+
+                // Scene consistency: boost memes from the pack the current scene locked onto.
+                if (!string.IsNullOrEmpty(session.ScenePackId) && m.pack == session.ScenePackId)
+                {
+                    score += _scenePackBias;
+                }
 
                 // Recent usage penalty (per-meme cooldown window and simple recency).
                 double sinceUse = now - session.LastUseTime(m.id);

@@ -44,6 +44,7 @@ namespace MemeAR.AppRoot
         private IObservationProvider _activeProvider;
         private IARSpatialProvider _activeSpatial;
         private MemePipeline _pipeline;
+        private List<MemeDefinition> _catalog;
 
         private float _accumulator;
 
@@ -72,6 +73,8 @@ namespace MemeAR.AppRoot
             _simSpatial = new SimulatedSpatialProvider(60f, new Vector2(Screen.width, Screen.height));
             _simProvider = new SimulatedObservationProvider(config, _simSpatial);
 
+            _catalog = BuildCatalog();
+
             _renderer = GetComponent<MemeRenderer>();
             if (_renderer == null)
             {
@@ -86,11 +89,34 @@ namespace MemeAR.AppRoot
             BuildForMode(mode);
         }
 
+        private List<MemeDefinition> BuildCatalog()
+        {
+            var list = new List<MemeDefinition>();
+            if (catalog != null && catalog.Memes != null && catalog.Memes.Count > 0)
+            {
+                list.AddRange(catalog.Memes);
+            }
+            else
+            {
+                list.AddRange(DefaultMemeCatalog.Build());
+            }
+
+            // Append any user-provided packs (their own clips + attribution).
+            List<MemeDefinition> packs = MemePackLoader.LoadAll();
+            if (packs.Count > 0)
+            {
+                Debug.Log($"[AppController] Loaded {packs.Count} meme(s) from user packs.");
+                list.AddRange(packs);
+            }
+
+            return list;
+        }
+
         private void BuildForMode(Mode target)
         {
             _pipeline?.Dispose();
 
-            IReadOnlyList<MemeDefinition> catalogList = catalog != null ? catalog.Memes : null;
+            IReadOnlyList<MemeDefinition> catalogList = _catalog;
 
             if (target == Mode.LiveAR && arProvider != null)
             {

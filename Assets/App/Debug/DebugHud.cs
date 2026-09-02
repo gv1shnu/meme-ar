@@ -82,7 +82,12 @@ namespace MemeAR.DebugTools
                     controller.ToggleMode();
                 }
 
-                if (screenshots != null && GUI.Button(new Rect(300f, 10f, 120f, 34f), "Screenshot"))
+                if (GUI.Button(new Rect(300f, 10f, 120f, 34f), MemeAR.Rendering.ReactionAudioState.Muted ? "Audio: off" : "Audio: on"))
+                {
+                    MemeAR.Rendering.ReactionAudioState.Muted = !MemeAR.Rendering.ReactionAudioState.Muted;
+                }
+
+                if (screenshots != null && GUI.Button(new Rect(430f, 10f, 120f, 34f), "Screenshot"))
                 {
                     screenshots.Capture();
                 }
@@ -106,7 +111,7 @@ namespace MemeAR.DebugTools
             _sb.AppendLine($"predicted {t.PredictedEventCount}  prefetch-sets {t.PreparedCandidateSets}");
             _sb.AppendLine($"last event: {t.LastConfirmedEvent}");
             _sb.AppendLine($"opportunity: {t.LastOpportunityScore:0.00}  accepted={t.LastOpportunityAccepted}  {(string.IsNullOrEmpty(t.LastRejectReason) ? "" : "(" + t.LastRejectReason + ")")}");
-            _sb.AppendLine($"selected meme: {t.LastSelectedMemeId}");
+            _sb.AppendLine($"selected meme: {t.LastSelectedMemeId}   pack: {t.ScenePack}");
             _sb.AppendLine($"comedic delay: {t.LastComedicDelayMs:0} ms   trigger→visible: {t.LastTriggerToVisibleMs:0.0} ms");
             _sb.AppendLine($"active overlays: {t.ActiveMemes}   total shown: {t.TotalMemesShown}");
             _sb.AppendLine($"global cooldown: {t.GlobalCooldownRemaining:0.0} s");

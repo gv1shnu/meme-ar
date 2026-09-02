@@ -23,6 +23,7 @@ namespace MemeAR.Pipeline
         public string LastRejectReason;
 
         public string LastSelectedMemeId;
+        public string ScenePack;
         public float LastComedicDelayMs;
         public double LastTriggerToVisibleMs;
 

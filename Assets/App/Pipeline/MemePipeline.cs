@@ -111,6 +111,15 @@ namespace MemeAR.Pipeline
 
             _lastObservationTime = now;
 
+            // Scene consistency: after a quiet gap, end the current scene so a new pack can lock.
+            SessionState session0 = _buffer.Session;
+            if (session0.ScenePackId != null &&
+                session0.LastMemeTimestamp > double.NegativeInfinity &&
+                (now - session0.LastMemeTimestamp) > _config.sceneResetSeconds)
+            {
+                session0.ScenePackId = null;
+            }
+
             // 1) Shared relation extraction + temporal memory.
             using (_profiler.Measure(PipelineStages.SceneUpdate))
             {
@@ -212,8 +221,15 @@ namespace MemeAR.Pipeline
             _buffer.Session.RecordMemeShown(selected.id, now);
             _buffer.Session.ActiveMemeCount++;
 
+            // Lock the scene onto this meme's pack for tonal consistency.
+            if (string.IsNullOrEmpty(_buffer.Session.ScenePackId))
+            {
+                _buffer.Session.ScenePackId = selected.pack;
+            }
+
             _telemetry.LastSelectedMemeId = selected.id;
             _telemetry.LastComedicDelayMs = timing.ComedicDelayMs;
+            _telemetry.ScenePack = _buffer.Session.ScenePackId;
         }
 
         private MemeDefinition SelectMeme(SceneEvent e, double now)

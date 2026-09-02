@@ -23,8 +23,21 @@ namespace MemeAR.Memes
         [Header("Presentation")]
         [Tooltip("Optional sprite. If null the renderer draws a generated placeholder card.")]
         public Sprite sprite;
-        [Tooltip("Background tint used for the placeholder card when no sprite is set.")]
+        [Tooltip("Background tint used for the placeholder / generated card.")]
         public Color accentColor = new Color(0.15f, 0.7f, 1f);
+
+        [Header("Media (video/audio clip)")]
+        [Tooltip("Visual media for this reaction. Defaults to a generated animated card.")]
+        public MediaReference media = new MediaReference();
+        [Tooltip("Optional audio for this reaction.")]
+        public AudioReference audio = new AudioReference();
+        [Tooltip("Attribution shown in the card footer, e.g. 'Source: @creator (YouTube)'. " +
+                 "This is credit for the audience — it is NOT a substitute for a content license.")]
+        public string attribution = "";
+
+        [Header("Scene consistency")]
+        [Tooltip("Pack id. A scene locks onto one pack so reactions stay tonally consistent.")]
+        public string pack = "classic";
 
         [Header("Semantics")]
         public List<string> tags = new List<string>();

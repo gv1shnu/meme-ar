@@ -15,6 +15,9 @@ namespace MemeAR.Temporal
         public int ActiveMemeCount;
         public int TotalMemesShown;
 
+        /// <summary>Pack the current scene is locked onto, so reactions stay tonally consistent.</summary>
+        public string ScenePackId;
+
         private readonly Dictionary<EventType, double> _lastTriggerByType = new Dictionary<EventType, double>();
         private readonly Dictionary<string, double> _lastUseByMemeId = new Dictionary<string, double>();
         private readonly Queue<EventType> _recentTriggerTypes = new Queue<EventType>();
@@ -54,6 +57,7 @@ namespace MemeAR.Temporal
             LastMemeTimestamp = double.NegativeInfinity;
             ActiveMemeCount = 0;
             TotalMemesShown = 0;
+            ScenePackId = null;
             _lastTriggerByType.Clear();
             _lastUseByMemeId.Clear();
             _recentTriggerTypes.Clear();

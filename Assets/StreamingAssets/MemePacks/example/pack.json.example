@@ -1,0 +1,38 @@
+{
+  "pack": "example_hype",
+  "memes": [
+    {
+      "id": "example_wow",
+      "title": "WOW",
+      "clip": "wow.mp4",
+      "source": "Source: replace with the clip's creator/platform",
+      "blend": "chroma",
+      "tags": ["surprise", "reaction", "hype"],
+      "events": ["SuddenMotion", "ObjectMoved", "PersonReachedTowardObject"],
+      "captions": ["WOW", "no wayyy", "{P} really did that"],
+      "durationSec": 3.5,
+      "delayMinMs": 0,
+      "delayMaxMs": 120,
+      "minPeople": 0,
+      "maxPeople": 0,
+      "placement": "auto",
+      "weight": 1.2
+    },
+    {
+      "id": "example_lets_go",
+      "title": "LET'S GO",
+      "clip": "lets_go.mp4",
+      "audio": "lets_go.mp3",
+      "source": "Source: replace with the clip's creator/platform",
+      "blend": "opaque",
+      "tags": ["hype", "group", "attention"],
+      "events": ["GroupAttentionConverged", "PersonEntered"],
+      "captions": ["LET'S GOOO"],
+      "durationSec": 4.0,
+      "delayMinMs": 100,
+      "delayMaxMs": 260,
+      "minPeople": 1,
+      "placement": "above_person"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 using UnityEngine;
+using MemeAR.Memes;
 using MemeAR.Placement;
 
 namespace MemeAR.Rendering
@@ -26,6 +27,13 @@ namespace MemeAR.Rendering
         public readonly Color AccentColor;
         public readonly Sprite Sprite;
 
+        // Media (video/audio). Media/Audio may be null (e.g. remote or text-only reactions),
+        // in which case the renderer draws a generated/sprite card with the dialogue text.
+        public readonly MediaKind MediaKind;
+        public readonly MediaReference Media;
+        public readonly AudioReference Audio;
+        public readonly string Attribution;
+
         public readonly RenderTargetType TargetType;
         public readonly string TargetId;
 
@@ -45,12 +53,17 @@ namespace MemeAR.Rendering
             string memeId, string caption, Color accentColor, Sprite sprite,
             RenderTargetType targetType, string targetId,
             PlacementMode placementMode, Vector2 screenAnchor, Pose? worldPose, Vector3 offset, float scale,
-            double showAt, float duration, AnimationStyle animationStyle, bool faceCamera, TrackingBehavior trackingBehavior)
+            double showAt, float duration, AnimationStyle animationStyle, bool faceCamera, TrackingBehavior trackingBehavior,
+            MediaKind mediaKind = MediaKind.GeneratedCard, MediaReference media = null, AudioReference audio = null, string attribution = null)
         {
             MemeId = memeId;
             Caption = caption;
             AccentColor = accentColor;
             Sprite = sprite;
+            MediaKind = mediaKind;
+            Media = media;
+            Audio = audio;
+            Attribution = attribution;
             TargetType = targetType;
             TargetId = targetId;
             PlacementMode = placementMode;

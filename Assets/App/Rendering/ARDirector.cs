@@ -49,7 +49,11 @@ namespace MemeAR.Rendering
                 duration: timing.DurationSeconds,
                 animationStyle: timing.AnimationStyle,
                 faceCamera: placement.FaceCamera,
-                trackingBehavior: placement.TrackingBehavior);
+                trackingBehavior: placement.TrackingBehavior,
+                mediaKind: meme.media != null ? meme.media.kind : MediaKind.GeneratedCard,
+                media: meme.media,
+                audio: meme.audio,
+                attribution: meme.attribution);
         }
 
         private string BuildCaption(MemeDefinition meme, SceneEvent e)

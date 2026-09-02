@@ -25,7 +25,7 @@ namespace MemeAR.Rendering
             public MemeRenderInstruction Instruction;
             public double TriggerTime;
             public double ShowAt;
-            public ReactionCardView View;
+            public ReactionViewBase View;
             public bool Shown;
         }
 
@@ -37,10 +37,12 @@ namespace MemeAR.Rendering
         private MemeArConfig _config;
         private Camera _camera;
         private Font _font;
+        private Shader _chromaShader;
 
         private Canvas _canvas;
         private RectTransform _canvasRect;
-        private readonly List<ReactionCardView> _pool = new List<ReactionCardView>(8);
+        private readonly List<ReactionCardView> _cardPool = new List<ReactionCardView>(8);
+        private readonly List<MediaReactionView> _mediaPool = new List<MediaReactionView>(4);
         private readonly List<Scheduled> _pending = new List<Scheduled>(8);
         private readonly List<Scheduled> _active = new List<Scheduled>(8);
 
@@ -54,6 +56,10 @@ namespace MemeAR.Rendering
             _config = config;
             _camera = camera;
             _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _chromaShader = Shader.Find("MemeAR/UIChromaKey");
+
+            ReactionAudioState.Muted = !config.enableAudio;
+            ReactionAudioState.MasterVolume = config.masterVolume;
 
             EnsureCanvas();
         }
@@ -131,9 +137,14 @@ namespace MemeAR.Rendering
 
         private void ActivateNow(Scheduled s, double now)
         {
-            ReactionCardView view = Rent();
+            ReactionViewBase view = Rent(s.Instruction);
             view.Configure(s.Instruction, _font);
             view.SetTimings(_config.popInSeconds, _config.fadeOutSeconds);
+            if (view is MediaReactionView media)
+            {
+                media.SetLoadTimeout(_config.mediaLoadTimeoutSeconds);
+            }
+
             s.View = view;
             PositionCard(s);
             view.Show();
@@ -175,22 +186,37 @@ namespace MemeAR.Rendering
             }
         }
 
-        private ReactionCardView Rent()
+        private ReactionViewBase Rent(in MemeRenderInstruction instruction)
         {
-            for (int i = 0; i < _pool.Count; i++)
+            if (instruction.MediaKind == MediaKind.Video)
             {
-                if (!_pool[i].IsActive)
+                for (int i = 0; i < _mediaPool.Count; i++)
                 {
-                    return _pool[i];
+                    if (!_mediaPool[i].IsActive)
+                    {
+                        return _mediaPool[i];
+                    }
+                }
+
+                MediaReactionView media = MediaReactionView.Create(_canvasRect, _font, _chromaShader);
+                _mediaPool.Add(media);
+                return media;
+            }
+
+            for (int i = 0; i < _cardPool.Count; i++)
+            {
+                if (!_cardPool[i].IsActive)
+                {
+                    return _cardPool[i];
                 }
             }
 
             ReactionCardView view = ReactionCardView.Create(_canvasRect, _font);
-            _pool.Add(view);
+            _cardPool.Add(view);
             return view;
         }
 
-        private void ReturnToPool(ReactionCardView view)
+        private void ReturnToPool(ReactionViewBase view)
         {
             view.Hide();
         }

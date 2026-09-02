@@ -19,7 +19,7 @@ namespace MemeAR.Memes
             var list = new List<MemeDefinition>();
 
             list.Add(Make(
-                "reaction_side_eye", "Side Eye", new Color(0.55f, 0.35f, 0.85f),
+                "reaction_side_eye", "Side Eye", new Color(0.55f, 0.35f, 0.85f), "awkward",
                 new[] { MemeTags.SideEye, MemeTags.Awkward, MemeTags.Reaction },
                 new[] { EventType.PersonReachedTowardObject, EventType.AttentionShift },
                 minPeople: 1, placement: PlacementPolicy.PreferAbovePerson,
@@ -27,7 +27,7 @@ namespace MemeAR.Memes
                 captions: new[] { "…really, {P}?", "I saw that." }));
 
             list.Add(Make(
-                "reaction_gasp", "Gasp!", new Color(1f, 0.55f, 0.2f),
+                "reaction_gasp", "Gasp!", new Color(1f, 0.55f, 0.2f), "hype",
                 new[] { MemeTags.Surprise, MemeTags.Reaction },
                 new[] { EventType.SuddenMotion, EventType.ObjectMoved, EventType.PersonReachedTowardObject },
                 minPeople: 0, placement: PlacementPolicy.PreferScreenSpace,
@@ -35,7 +35,7 @@ namespace MemeAR.Memes
                 captions: new[] { "GASP", "No way!" }));
 
             list.Add(Make(
-                "reaction_snack_thief", "Snack Thief", new Color(0.9f, 0.25f, 0.35f),
+                "reaction_snack_thief", "Snack Thief", new Color(0.9f, 0.25f, 0.35f), "awkward",
                 new[] { MemeTags.Food, MemeTags.Awkward, MemeTags.Reaction },
                 new[] { EventType.PersonReachedTowardObject },
                 minPeople: 1, placement: PlacementPolicy.PreferAboveObject,
@@ -43,7 +43,7 @@ namespace MemeAR.Memes
                 captions: new[] { "That's not yours, {P}", "Snack heist in progress" }));
 
             list.Add(Make(
-                "reaction_all_eyes", "All Eyes", new Color(0.2f, 0.75f, 0.9f),
+                "reaction_all_eyes", "All Eyes", new Color(0.2f, 0.75f, 0.9f), "hype",
                 new[] { MemeTags.Group, MemeTags.Attention },
                 new[] { EventType.GroupAttentionConverged },
                 minPeople: 2, placement: PlacementPolicy.PreferAboveObject,
@@ -51,7 +51,7 @@ namespace MemeAR.Memes
                 captions: new[] { "All eyes on it", "The main character has arrived" }));
 
             list.Add(Make(
-                "reaction_new_challenger", "New Challenger", new Color(0.3f, 0.85f, 0.5f),
+                "reaction_new_challenger", "New Challenger", new Color(0.3f, 0.85f, 0.5f), "hype",
                 new[] { MemeTags.Entrance, MemeTags.Reaction },
                 new[] { EventType.PersonEntered },
                 minPeople: 1, placement: PlacementPolicy.PreferAbovePerson,
@@ -59,7 +59,7 @@ namespace MemeAR.Memes
                 captions: new[] { "A wild {P} appears", "New challenger approaching" }));
 
             list.Add(Make(
-                "reaction_exit_stage", "Exit Stage", new Color(0.6f, 0.6f, 0.65f),
+                "reaction_exit_stage", "Exit Stage", new Color(0.6f, 0.6f, 0.65f), "awkward",
                 new[] { MemeTags.Exit, MemeTags.Reaction },
                 new[] { EventType.PersonLeft },
                 minPeople: 0, placement: PlacementPolicy.PreferScreenSpace,
@@ -67,7 +67,7 @@ namespace MemeAR.Memes
                 captions: new[] { "And {P} is gone", "Exit, stage left" }));
 
             list.Add(Make(
-                "reaction_confused", "Confused", new Color(0.85f, 0.7f, 0.2f),
+                "reaction_confused", "Confused", new Color(0.85f, 0.7f, 0.2f), "awkward",
                 new[] { MemeTags.Confusion, MemeTags.Reaction },
                 new[] { EventType.AttentionShift, EventType.GenericInterestingChange },
                 minPeople: 1, placement: PlacementPolicy.PreferAbovePerson,
@@ -75,7 +75,7 @@ namespace MemeAR.Memes
                 captions: new[] { "wait, what?", "{P}.exe stopped responding" }));
 
             list.Add(Make(
-                "reaction_nice", "Nice", new Color(0.4f, 0.8f, 0.4f),
+                "reaction_nice", "Nice", new Color(0.4f, 0.8f, 0.4f), "hype",
                 new[] { MemeTags.Success, MemeTags.Reaction },
                 new[] { EventType.GenericInterestingChange, EventType.ObjectAppeared },
                 minPeople: 0, placement: PlacementPolicy.Auto,
@@ -86,7 +86,7 @@ namespace MemeAR.Memes
         }
 
         private static MemeDefinition Make(
-            string id, string title, Color accent,
+            string id, string title, Color accent, string pack,
             string[] tags, EventType[] events,
             int minPeople, PlacementPolicy placement,
             Vector2 delay, AnimationStyle style, string[] captions)
@@ -95,6 +95,10 @@ namespace MemeAR.Memes
             m.id = id;
             m.title = title;
             m.accentColor = accent;
+            m.pack = pack;
+            m.media = new MediaReference { kind = MediaKind.GeneratedCard };
+            m.audio = new AudioReference();
+            m.attribution = string.Empty; // original placeholder content
             m.tags = new List<string>(tags);
             m.supportedEventTypes = new List<EventType>(events);
             m.minPeople = minPeople;

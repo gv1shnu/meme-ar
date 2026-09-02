@@ -71,6 +71,23 @@ namespace MemeAR.Infrastructure
         [Tooltip("Delayed reaction delay range.")]
         public Vector2 delayedReactionMs = new Vector2(300f, 800f);
 
+        [Header("Media (video/audio clips)")]
+        [Tooltip("Master switch for reaction audio.")]
+        public bool enableAudio = true;
+
+        [Tooltip("Master volume applied to all reaction clip audio.")]
+        [Range(0f, 1f)] public float masterVolume = 0.8f;
+
+        [Tooltip("Seconds to wait for a clip to load before falling back to the dialogue card.")]
+        [Range(0.2f, 8f)] public float mediaLoadTimeoutSeconds = 2.5f;
+
+        [Header("Scene consistency (meme packs)")]
+        [Tooltip("A scene locks onto one meme pack; reactions from that pack are boosted.")]
+        [Range(0f, 3f)] public float scenePackBias = 1.25f;
+
+        [Tooltip("Seconds of inactivity after which the scene theme resets and a new pack may lock.")]
+        [Range(2f, 60f)] public float sceneResetSeconds = 12f;
+
         [Header("Meme Presentation")]
         [Tooltip("Default visible duration for a reaction, in seconds.")]
         [Range(0.5f, 12f)] public float defaultMemeDurationSeconds = 4.0f;

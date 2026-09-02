@@ -61,7 +61,7 @@ namespace MemeAR.Pipeline
             var opportunity = new ComedyOpportunityEngine(config);
 
             var retriever = new LocalMemeRetriever();
-            var ranker = new DeterministicMemeRanker(random);
+            var ranker = new DeterministicMemeRanker(random, scenePackBias: config.scenePackBias);
             var cache = new ReactionCandidateCache(retriever, ranker);
 
             var timing = new ComedyTimingPolicy(config, random);

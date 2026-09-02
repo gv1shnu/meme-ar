@@ -4,35 +4,19 @@ using UnityEngine.UI;
 namespace MemeAR.Rendering
 {
     /// <summary>
-    /// A single reusable reaction card (screen-space UI). Built entirely in code so the MVP
-    /// needs no prefab assets. Supports pop-in with a small overshoot, an optional settle
-    /// bounce, a gentle idle float, and a fade-out. Position each frame is driven by the
-    /// renderer (screen anchor, or a world pose projected to screen), so a single robust
-    /// screen-space canvas can render both screen- and world-anchored reactions.
-    ///
-    /// Object-pooled: cards are shown/hidden and reconfigured, never Instantiate/Destroy'd
-    /// during steady-state runtime.
+    /// A reaction card (screen-space UI) built entirely in code — no prefab assets needed.
+    /// Renders a generated animated card or a still sprite, the dialogue caption, and an
+    /// attribution footer. This is also the text fallback the media view degrades to when a
+    /// clip cannot load. Animation/lifetime come from <see cref="ReactionViewBase"/>.
     /// </summary>
-    public sealed class ReactionCardView : MonoBehaviour
+    public sealed class ReactionCardView : ReactionViewBase
     {
-        public enum Phase { Idle, PoppingIn, Holding, FadingOut }
-
-        private RectTransform _rect;
-        private CanvasGroup _group;
         private Image _background;
         private Image _image;
         private Text _caption;
-
-        private Phase _phase = Phase.Idle;
-        private float _phaseTime;
-        private float _popInSeconds = 0.18f;
-        private float _fadeOutSeconds = 0.35f;
-        private float _holdSeconds = 4f;
-        private AnimationStyle _style = AnimationStyle.Pop;
-        private float _baseScale = 1f;
-
-        public bool IsActive => _phase != Phase.Idle;
-        public string MemeId { get; private set; }
+        private Text _footer;
+        private Color _accent = Color.white;
+        private bool _animatedCard;
 
         public static ReactionCardView Create(Transform parent, Font font)
         {
@@ -40,9 +24,9 @@ namespace MemeAR.Rendering
             go.transform.SetParent(parent, false);
 
             var view = go.AddComponent<ReactionCardView>();
-            view._rect = go.GetComponent<RectTransform>();
-            view._group = go.GetComponent<CanvasGroup>();
-            view._rect.sizeDelta = new Vector2(360f, 200f);
+            var rect = go.GetComponent<RectTransform>();
+            view.InitBase(rect, go.GetComponent<CanvasGroup>());
+            rect.sizeDelta = new Vector2(360f, 210f);
 
             var bg = new GameObject("BG", typeof(RectTransform), typeof(Image));
             bg.transform.SetParent(go.transform, false);
@@ -62,33 +46,34 @@ namespace MemeAR.Rendering
             imgRect.sizeDelta = new Vector2(120f, 120f);
             view._image.enabled = false;
 
-            var cap = new GameObject("Caption", typeof(RectTransform), typeof(Text));
-            cap.transform.SetParent(go.transform, false);
-            view._caption = cap.GetComponent<Text>();
-            view._caption.font = font;
-            view._caption.fontSize = 34;
-            view._caption.alignment = TextAnchor.LowerCenter;
-            view._caption.horizontalOverflow = HorizontalWrapMode.Wrap;
-            view._caption.verticalOverflow = VerticalWrapMode.Overflow;
-            view._caption.color = Color.white;
-            var capRect = cap.GetComponent<RectTransform>();
+            view._caption = MakeText(go.transform, font, 34, TextAnchor.MiddleCenter);
+            var capRect = view._caption.rectTransform;
             Stretch(capRect);
-            capRect.offsetMin = new Vector2(16f, 16f);
+            capRect.offsetMin = new Vector2(16f, 34f);
             capRect.offsetMax = new Vector2(-16f, -16f);
+
+            view._footer = MakeText(go.transform, font, 18, TextAnchor.LowerCenter);
+            view._footer.color = new Color(1f, 1f, 1f, 0.6f);
+            var footRect = view._footer.rectTransform;
+            footRect.anchorMin = new Vector2(0f, 0f);
+            footRect.anchorMax = new Vector2(1f, 0f);
+            footRect.pivot = new Vector2(0.5f, 0f);
+            footRect.offsetMin = new Vector2(12f, 8f);
+            footRect.offsetMax = new Vector2(-12f, 30f);
 
             go.SetActive(false);
             return view;
         }
 
-        public void Configure(in MemeRenderInstruction instruction, Font font)
+        public override void Configure(in MemeRenderInstruction instruction, Font font)
         {
-            MemeId = instruction.MemeId;
-            _style = instruction.AnimationStyle;
-            _holdSeconds = instruction.Duration;
-            _baseScale = Mathf.Max(0.05f, instruction.Scale);
+            ConfigureBase(instruction);
+            _accent = instruction.AccentColor;
+            _animatedCard = instruction.MediaKind == MediaKind.GeneratedCard;
 
-            _background.color = new Color(instruction.AccentColor.r, instruction.AccentColor.g, instruction.AccentColor.b, 0.92f);
+            _background.color = new Color(_accent.r, _accent.g, _accent.b, 0.92f);
             _caption.text = instruction.Caption;
+            _footer.text = string.IsNullOrEmpty(instruction.Attribution) ? "" : instruction.Attribution;
 
             if (instruction.Sprite != null)
             {
@@ -101,129 +86,31 @@ namespace MemeAR.Rendering
             }
         }
 
-        public void SetTimings(float popInSeconds, float fadeOutSeconds)
+        protected override void OnTick(float dt)
         {
-            _popInSeconds = Mathf.Max(0.01f, popInSeconds);
-            _fadeOutSeconds = Mathf.Max(0.01f, fadeOutSeconds);
-        }
-
-        public void Show()
-        {
-            gameObject.SetActive(true);
-            _phase = Phase.PoppingIn;
-            _phaseTime = 0f;
-            _group.alpha = 0f;
-            _rect.localScale = Vector3.one * (_baseScale * 0.6f);
-        }
-
-        public void SetScreenPosition(Vector2 pixelPosition, float distanceScale)
-        {
-            _rect.position = pixelPosition;
-            // Distance scaling is applied on top of the animation scale in Tick().
-            _distanceScale = Mathf.Clamp(distanceScale, 0.4f, 2.5f);
-        }
-
-        private float _distanceScale = 1f;
-
-        /// <summary>Advances animation/lifetime. Returns false when the card is finished.</summary>
-        public bool Tick(float dt)
-        {
-            _phaseTime += dt;
-            switch (_phase)
+            if (!_animatedCard)
             {
-                case Phase.PoppingIn:
-                    TickPopIn();
-                    break;
-                case Phase.Holding:
-                    TickHold();
-                    break;
-                case Phase.FadingOut:
-                    return TickFadeOut();
+                return;
             }
 
-            return true;
+            // Gentle animated shimmer so a card feels alive without any asset.
+            float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * 3f);
+            float b = Mathf.Lerp(0.82f, 1f, pulse);
+            _background.color = new Color(_accent.r * b, _accent.g * b, _accent.b * b, 0.92f);
         }
 
-        private void TickPopIn()
+        private static Text MakeText(Transform parent, Font font, int size, TextAnchor anchor)
         {
-            float t = Mathf.Clamp01(_phaseTime / _popInSeconds);
-            _group.alpha = t;
-
-            float scale;
-            if (_style == AnimationStyle.Pop || _style == AnimationStyle.Bounce)
-            {
-                // Overshoot then settle.
-                float overshoot = 1f + 0.18f * Mathf.Sin(t * Mathf.PI);
-                scale = Mathf.Lerp(0.6f, 1f, t) * overshoot;
-            }
-            else
-            {
-                scale = Mathf.Lerp(0.85f, 1f, t);
-            }
-
-            ApplyScale(scale);
-
-            if (t >= 1f)
-            {
-                _phase = Phase.Holding;
-                _phaseTime = 0f;
-            }
-        }
-
-        private void TickHold()
-        {
-            _group.alpha = 1f;
-            // Gentle settle bounce (scale only; screen position is owned by the renderer each frame).
-            float settle = _style == AnimationStyle.Bounce ? 1f + 0.02f * Mathf.Sin(_phaseTime * 6f) : 1f;
-            ApplyScale(settle);
-
-            if (_phaseTime >= _holdSeconds)
-            {
-                _phase = Phase.FadingOut;
-                _phaseTime = 0f;
-            }
-        }
-
-        private bool TickFadeOut()
-        {
-            float t = Mathf.Clamp01(_phaseTime / _fadeOutSeconds);
-            _group.alpha = 1f - t;
-            ApplyScale(1f + 0.1f * t);
-            if (t >= 1f)
-            {
-                Hide();
-                return false;
-            }
-
-            return true;
-        }
-
-        private void ApplyScale(float animScale)
-        {
-            _rect.localScale = Vector3.one * (_baseScale * animScale * _distanceScale);
-        }
-
-        public void RequestFadeOut()
-        {
-            if (_phase != Phase.FadingOut && _phase != Phase.Idle)
-            {
-                _phase = Phase.FadingOut;
-                _phaseTime = 0f;
-            }
-        }
-
-        public void Hide()
-        {
-            _phase = Phase.Idle;
-            gameObject.SetActive(false);
-        }
-
-        private static void Stretch(RectTransform rt)
-        {
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
+            var go = new GameObject("Text", typeof(RectTransform), typeof(Text));
+            go.transform.SetParent(parent, false);
+            var t = go.GetComponent<Text>();
+            t.font = font;
+            t.fontSize = size;
+            t.alignment = anchor;
+            t.horizontalOverflow = HorizontalWrapMode.Wrap;
+            t.verticalOverflow = VerticalWrapMode.Overflow;
+            t.color = Color.white;
+            return t;
         }
     }
 }
